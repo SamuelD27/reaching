@@ -81,9 +81,21 @@ def cmd_extract(args):
         # Run extraction
         print("\n⏳ Starting extraction...")
         print("   (This may take a while due to rate limiting)")
-        results = extractor.run_extraction(max_total_contacts=max_contacts)
 
-        if not results:
+        # Build list of companies to search
+        companies_list = None
+        if companies:
+            companies_list = []
+            for sector, company_list in extractor.finance_companies.items():
+                companies_list.extend(company_list)
+
+        # Extract contacts (returns a DataFrame)
+        df = extractor.extract_with_distribution(
+            companies_to_search=companies_list,
+            max_total_contacts=max_contacts
+        )
+
+        if df.empty:
             print("\n⚠️  No contacts extracted")
             return 0
 
@@ -94,25 +106,21 @@ def cmd_extract(args):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         base_name = f"extracted_contacts_{timestamp}"
 
-        print(f"\n💾 Saving {len(results)} contacts...")
+        print(f"\n💾 Saving {len(df)} contacts...")
 
         if args.format == 'xlsx':
             output_file = output_dir / f"{base_name}.xlsx"
-            df = pd.DataFrame(results)
             df.to_excel(output_file, index=False)
         elif args.format == 'csv':
             output_file = output_dir / f"{base_name}.csv"
-            df = pd.DataFrame(results)
             df.to_csv(output_file, index=False)
         elif args.format == 'json':
             output_file = output_dir / f"{base_name}.json"
-            import json
-            with open(output_file, 'w') as f:
-                json.dump(results, f, indent=2)
+            df.to_json(output_file, orient='records', indent=2)
 
         print(f"   ✅ Saved to: {output_file}")
         print(f"\n✨ Extraction complete!")
-        print(f"   Total contacts: {len(results)}")
+        print(f"   Total contacts: {len(df)}")
 
         return 0
 
