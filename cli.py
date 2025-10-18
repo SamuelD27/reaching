@@ -13,12 +13,17 @@ import argparse
 import sys
 import os
 from pathlib import Path
+from datetime import datetime
+import json
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.config import Config
 from src.clients.base_client import BaseAPIClient
+from smart_finance_extractor import SmartFinanceExtractor
+import pandas as pd
+from src.utils.email_verifier import EmailVerifier
 
 
 def cmd_extract(args):
@@ -44,18 +49,78 @@ def cmd_extract(args):
     else:
         companies = None
 
+    max_contacts = args.max if args.max else config.get('extraction.max_total_contacts', 100)
+
     print(f"\n📋 Configuration:")
-    print(f"   Companies: {companies if companies else 'All'}")
-    print(f"   Max contacts: {args.max if args.max else config.get('extraction.max_total_contacts')}")
+    print(f"   Companies: {companies if companies else 'All finance companies'}")
+    print(f"   Max contacts: {max_contacts}")
     print(f"   Resume: {args.resume}")
     print(f"   Output format: {args.format}")
 
-    # TODO: Implement actual extraction
-    # This would use the refactored smart_finance_extractor
-    print("\n⚠️  Extraction functionality coming in Phase 2 completion")
-    print("   For now, use: python3 smart_finance_extractor.py")
+    try:
+        # Create extractor
+        print("\n🚀 Initializing extractor...")
+        extractor = SmartFinanceExtractor(api_key)
 
-    return 0
+        # Filter companies if specified
+        if companies:
+            print(f"   Filtering for: {', '.join(companies)}")
+            # Filter the finance_companies dict to only include specified companies
+            filtered_companies = {}
+            for sector, company_list in extractor.finance_companies.items():
+                filtered = [c for c in company_list if any(target.lower() in c.lower() for target in companies)]
+                if filtered:
+                    filtered_companies[sector] = filtered
+
+            if not filtered_companies:
+                print(f"❌ ERROR: No matching companies found for: {companies}")
+                return 1
+
+            extractor.finance_companies = filtered_companies
+
+        # Run extraction
+        print("\n⏳ Starting extraction...")
+        print("   (This may take a while due to rate limiting)")
+        results = extractor.run_extraction(max_total_contacts=max_contacts)
+
+        if not results:
+            print("\n⚠️  No contacts extracted")
+            return 0
+
+        # Save results
+        output_dir = Path("output")
+        output_dir.mkdir(exist_ok=True)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_name = f"extracted_contacts_{timestamp}"
+
+        print(f"\n💾 Saving {len(results)} contacts...")
+
+        if args.format == 'xlsx':
+            output_file = output_dir / f"{base_name}.xlsx"
+            df = pd.DataFrame(results)
+            df.to_excel(output_file, index=False)
+        elif args.format == 'csv':
+            output_file = output_dir / f"{base_name}.csv"
+            df = pd.DataFrame(results)
+            df.to_csv(output_file, index=False)
+        elif args.format == 'json':
+            output_file = output_dir / f"{base_name}.json"
+            import json
+            with open(output_file, 'w') as f:
+                json.dump(results, f, indent=2)
+
+        print(f"   ✅ Saved to: {output_file}")
+        print(f"\n✨ Extraction complete!")
+        print(f"   Total contacts: {len(results)}")
+
+        return 0
+
+    except Exception as e:
+        print(f"\n❌ Error during extraction: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
 
 
 def cmd_verify(args):
@@ -79,11 +144,80 @@ def cmd_verify(args):
     print(f"   Input: {input_file}")
     print(f"   Output: {output_file}")
 
-    # TODO: Implement verification
-    print("\n⚠️  Verification functionality coming in Phase 2 completion")
-    print("   For now, use: python3 email_verifier.py")
+    try:
+        # Load input file
+        print("\n📂 Loading contacts...")
+        if input_file.suffix == '.xlsx':
+            df = pd.read_excel(input_file)
+        elif input_file.suffix == '.csv':
+            df = pd.read_csv(input_file)
+        else:
+            print(f"❌ ERROR: Unsupported file format: {input_file.suffix}")
+            print("   Supported formats: .xlsx, .csv")
+            return 1
 
-    return 0
+        if 'email' not in df.columns:
+            print("❌ ERROR: Input file must have an 'email' column")
+            return 1
+
+        print(f"   Found {len(df)} contacts")
+
+        # Verify emails
+        print("\n🔍 Verifying emails...")
+        verifier = EmailVerifier()
+
+        verified_results = []
+        for idx, row in df.iterrows():
+            email = row['email']
+            if pd.isna(email) or not email:
+                continue
+
+            result = verifier.verify_with_fallback(email)
+            verified_results.append({
+                **row.to_dict(),
+                'verification_status': result['status'],
+                'verification_confidence': result['confidence'],
+                'verification_method': result['method']
+            })
+
+            # Progress indicator
+            if (idx + 1) % 10 == 0:
+                print(f"   Verified {idx + 1}/{len(df)} emails...")
+
+        print(f"   ✅ Verified {len(verified_results)} emails")
+
+        # Save results
+        print(f"\n💾 Saving results to {output_file}...")
+        result_df = pd.DataFrame(verified_results)
+
+        if output_file.suffix == '.xlsx':
+            result_df.to_excel(output_file, index=False)
+        elif output_file.suffix == '.csv':
+            result_df.to_csv(output_file, index=False)
+        else:
+            # Default to xlsx if no extension
+            output_file = output_file.with_suffix('.xlsx')
+            result_df.to_excel(output_file, index=False)
+
+        print(f"   ✅ Saved to: {output_file}")
+
+        # Print summary
+        print("\n📊 Verification Summary:")
+        print(f"   Total verified: {len(verified_results)}")
+        valid_count = sum(1 for r in verified_results if r['verification_status'] == 'valid')
+        invalid_count = sum(1 for r in verified_results if r['verification_status'] == 'invalid')
+        unknown_count = sum(1 for r in verified_results if r['verification_status'] == 'unknown')
+        print(f"   Valid: {valid_count}")
+        print(f"   Invalid: {invalid_count}")
+        print(f"   Unknown: {unknown_count}")
+
+        return 0
+
+    except Exception as e:
+        print(f"\n❌ Error during verification: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
 
 
 def cmd_status(args):
