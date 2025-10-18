@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+
+# API Keys and Sensitive Data
+*.env
+.env
+contact_history.json
+
+# Output Files (contains contact data)
+*.xlsx
+!domain_patterns.xlsx
+!mega_email_patterns.xlsx
+extraction.log
+extraction.pid
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.bak

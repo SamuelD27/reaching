@@ -1,0 +1,55 @@
+{
+  "Goldman Sachs": [
+    {
+      "email": "john.doe@gs.com",
+      "first_name": "John",
+      "last_name": "Doe"
+    },
+    {
+      "email": "jane.smith@gs.com",
+      "first_name": "Jane",
+      "last_name": "Smith"
+    },
+    {
+      "email": "michael.johnson@gs.com",
+      "first_name": "Michael",
+      "last_name": "Johnson"
+    }
+  ],
+  "Morgan Stanley": [
+    {
+      "email": "alice.wong@morganstanley.com",
+      "first_name": "Alice",
+      "last_name": "Wong"
+    },
+    {
+      "email": "bob.chen@morganstanley.com",
+      "first_name": "Bob",
+      "last_name": "Chen"
+    }
+  ],
+  "McKinsey": [
+    {
+      "email": "sarah_martinez@mckinsey.com",
+      "first_name": "Sarah",
+      "last_name": "Martinez"
+    },
+    {
+      "email": "david_lee@mckinsey.com",
+      "first_name": "David",
+      "last_name": "Lee"
+    }
+  ],
+  "Bain": [
+    {
+      "email": "emily.taylor@bain.com",
+      "first_name": "Emily",
+      "last_name": "Taylor"
+    },
+    {
+      "email": "james.anderson@bain.com",
+      "first_name": "James",
+      "last_name": "Anderson"
+    }
+  ]
+}
