@@ -6,9 +6,14 @@ Verifies your API key and checks available credits/limits
 
 import requests
 import json
+import os
 
-# Your API Key
-API_KEY = "1ac349bkd05e6c94a51cd27e7070e825a9e3392e"
+# Load API Key from environment variable
+API_KEY = os.getenv("ROCKETREACH_API_KEY")
+if not API_KEY:
+    print("ERROR: ROCKETREACH_API_KEY environment variable not set!")
+    print("Please set it with: export ROCKETREACH_API_KEY='your_key_here'")
+    exit(1)
 
 def check_api_status():
     """Check RocketReach API account status and limits"""

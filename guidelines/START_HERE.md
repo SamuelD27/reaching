@@ -123,12 +123,14 @@ python3 search_only_mode.py
 
 ## ⚙️ Configuration Needed
 
-### Step 1: API Key (Already Done ✅)
+### Step 1: Set Your API Key ⚠️ **ACTION REQUIRED**
 
-Your API key is already in the scripts:
-```python
-API_KEY = "1ac349bkd05e6c94a51cd27e7070e825a9e3392e"
+Set your RocketReach API key as an environment variable:
+```bash
+export ROCKETREACH_API_KEY="your_actual_api_key_here"
 ```
+
+**Note:** Never hardcode API keys in your scripts! Always use environment variables for security.
 
 ### Step 2: Domain Patterns ⚠️ **ACTION REQUIRED**
 

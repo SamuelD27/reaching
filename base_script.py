@@ -541,12 +541,16 @@ if __name__ == "__main__":
     # CONFIGURATION
     # ============================================================================
 
-    # RocketReach API Key
-    API_KEY = "1ac349bkd05e6c94a51cd27e7070e825a9e3392e"  # Replace with your actual API key
+    # RocketReach API Key - LOAD FROM ENVIRONMENT VARIABLE
+    API_KEY = os.getenv("ROCKETREACH_API_KEY")
+    if not API_KEY:
+        print("ERROR: ROCKETREACH_API_KEY environment variable not set!")
+        print("Please set it with: export ROCKETREACH_API_KEY='your_key_here'")
+        exit(1)
 
     # Email Configuration (for Outlook/Office 365)
-    SENDER_EMAIL = "your_email@u.nus.edu"  # Replace with your u.nus.edu email
-    SENDER_PASSWORD = "your_password"  # Replace with your password or app-specific password
+    SENDER_EMAIL = os.getenv("SENDER_EMAIL", "your_email@u.nus.edu")
+    SENDER_PASSWORD = os.getenv("SENDER_PASSWORD", "your_password")
 
     # Initialize extractor (will load contact history to avoid duplicates)
     extractor = RocketReachExtractor(API_KEY)

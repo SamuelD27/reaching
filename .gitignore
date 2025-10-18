@@ -11,7 +11,11 @@ env/
 # API Keys and Sensitive Data
 *.env
 .env
+.env.local
+.env.*.local
 contact_history.json
+config.yaml
+!config.example.yaml
 
 # Output Files (contains contact data)
 *.xlsx
@@ -19,6 +23,9 @@ contact_history.json
 !mega_email_patterns.xlsx
 extraction.log
 extraction.pid
+output/
+data/checkpoint.json
+*.log
 
 # macOS
 .DS_Store

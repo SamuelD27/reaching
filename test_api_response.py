@@ -6,7 +6,11 @@ Test what data we actually get from search vs lookup
 import requests
 import json
 
-API_KEY = "1ac349bkd05e6c94a51cd27e7070e825a9e3392e"
+API_KEY = os.getenv("ROCKETREACH_API_KEY")
+    if not API_KEY:
+        print("ERROR: ROCKETREACH_API_KEY environment variable not set!")
+        print("Please set it with: export ROCKETREACH_API_KEY='your_key_here'")
+        exit(1)
 base_url = "https://api.rocketreach.co/v2/api"
 headers = {
     "Api-Key": API_KEY,

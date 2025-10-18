@@ -1,0 +1,22 @@
+extraction:
+  batch_size: 10
+  max_per_company: 20
+  max_total_contacts: 500
+output:
+  directory: ./output
+  format: xlsx
+rocketreach:
+  rate_limits:
+    day:
+      limit: 350
+      window: 86400
+    hour:
+      limit: 35
+      window: 3600
+    minute:
+      limit: 10
+      window: 60
+  timeout: 30
+verification:
+  enabled: true
+  timeout: 15
